@@ -1,7 +1,19 @@
 const express = require('express');
+const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
+const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const User = require('./models/User');
+const Message = require('./models/Message');
+const ws = require('ws');
+const fs = require('fs');
 
 const app = express();
-const mongo_url = "mongodb+srv://adityashandilya1812:jcpprrs6543@cluster0.j0risrr.mongodb.net/?retryWrites=true&w=majority";
+
+
+dotenv.config();
 
 app.get('/test', (req,res) => {
     res.json("test ok");
