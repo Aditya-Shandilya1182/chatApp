@@ -1,7 +1,7 @@
-api/.env
+backend/.env
 client/.env
 .idea
-api/node_modules
+backend/node_modules
 client/node_modules
-api/uploads/*
+backend/uploads/*
 node_modules
