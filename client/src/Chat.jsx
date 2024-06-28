@@ -1,25 +1,27 @@
-import {useContext, useEffect, useRef, useState} from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Avatar from "./Avatar";
 import Logo from "./Logo";
-import {UserContext} from "./UserContext.jsx";
-import {uniqBy} from "lodash";
+import { UserContext } from "./UserContext.jsx";
+import { uniqBy } from "lodash";
 import axios from "axios";
 import Contact from "./Contact";
 
 export default function Chat() {
-  const [ws,setWs] = useState(null);
-  const [onlinePeople,setOnlinePeople] = useState({});
-  const [offlinePeople,setOfflinePeople] = useState({});
-  const [selectedUserId,setSelectedUserId] = useState(null);
-  const [newMessageText,setNewMessageText] = useState('');
-  const [messages,setMessages] = useState([]);
-  const {username,id,setId,setUsername} = useContext(UserContext);
+  const [ws, setWs] = useState(null);
+  const [onlinePeople, setOnlinePeople] = useState({});
+  const [offlinePeople, setOfflinePeople] = useState({});
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [newMessageText, setNewMessageText] = useState('');
+  const [messages, setMessages] = useState([]);
+  const { username, id, setId, setUsername } = useContext(UserContext);
   const divUnderMessages = useRef();
+
   useEffect(() => {
     connectToWs();
   }, [selectedUserId]);
+
   function connectToWs() {
-    const ws = new WebSocket('ws://localhost:4040');
+    const ws = new WebSocket('ws://localhost:4004/ws');
     setWs(ws);
     ws.addEventListener('message', handleMessage);
     ws.addEventListener('close', () => {
@@ -29,31 +31,35 @@ export default function Chat() {
       }, 1000);
     });
   }
+
   function showOnlinePeople(peopleArray) {
     const people = {};
-    peopleArray.forEach(({userId,username}) => {
+    peopleArray.forEach(({ userId, username }) => {
       people[userId] = username;
     });
     setOnlinePeople(people);
   }
+
   function handleMessage(ev) {
     const messageData = JSON.parse(ev.data);
-    console.log({ev,messageData});
+    console.log({ ev, messageData });
     if ('online' in messageData) {
       showOnlinePeople(messageData.online);
     } else if ('text' in messageData) {
       if (messageData.sender === selectedUserId) {
-        setMessages(prev => ([...prev, {...messageData}]));
+        setMessages(prev => ([...prev, { ...messageData }]));
       }
     }
   }
+
   function logout() {
-    axios.post('/logout').then(() => {
+    axios.post('/auth/logout').then(() => {
       setWs(null);
       setId(null);
       setUsername(null);
     });
   }
+
   function sendMessage(ev, file = null) {
     if (ev) ev.preventDefault();
     ws.send(JSON.stringify({
@@ -62,12 +68,16 @@ export default function Chat() {
       file,
     }));
     if (file) {
-      axios.get('/messages/'+selectedUserId).then(res => {
+      axios.get(`/messages/${selectedUserId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      }).then(res => {
         setMessages(res.data);
       });
     } else {
       setNewMessageText('');
-      setMessages(prev => ([...prev,{
+      setMessages(prev => ([...prev, {
         text: newMessageText,
         sender: id,
         recipient: selectedUserId,
@@ -75,6 +85,7 @@ export default function Chat() {
       }]));
     }
   }
+
   function sendFile(ev) {
     const reader = new FileReader();
     reader.readAsDataURL(ev.target.files[0]);
@@ -89,12 +100,12 @@ export default function Chat() {
   useEffect(() => {
     const div = divUnderMessages.current;
     if (div) {
-      div.scrollIntoView({behavior:'smooth', block:'end'});
+      div.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages]);
 
   useEffect(() => {
-    axios.get('/people').then(res => {
+    axios.get('/auth/profile').then(res => {
       const offlinePeopleArr = res.data
         .filter(p => p._id !== id)
         .filter(p => !Object.keys(onlinePeople).includes(p._id));
@@ -108,13 +119,18 @@ export default function Chat() {
 
   useEffect(() => {
     if (selectedUserId) {
-      axios.get('/messages/'+selectedUserId).then(res => {
+      console.log('fetching messages for', selectedUserId);
+      axios.get(`/messages/${selectedUserId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      }).then(res => {
         setMessages(res.data);
       });
     }
   }, [selectedUserId]);
 
-  const onlinePeopleExclOurUser = {...onlinePeople};
+  const onlinePeopleExclOurUser = { ...onlinePeople };
   delete onlinePeopleExclOurUser[id];
 
   const messagesWithoutDupes = uniqBy(messages, '_id');

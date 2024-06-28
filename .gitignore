@@ -5,3 +5,14 @@ backend/node_modules
 client/node_modules
 backend/uploads/*
 node_modules
+backend_v2/auth-service/node_modules
+backend_v2/message-service/node_modules
+backend_v2/ws/node_modules
+backend_v2/auth-service/.env
+backend_v2/message-service/.env
+backend_v2/ws/.env
+.env
+backend_v2/.env
+backend_v2/models
+backend_v2/gateway
+backend_v2/k8s/configmap.yaml

@@ -1,0 +1,44 @@
+version: '3'
+services:
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "4001:4001"
+    env_file:
+      - .env
+
+  user-service:
+    build: ./user-service
+    ports:
+      - "4002:4002"
+    env_file:
+      - .env
+
+  message-service:
+    build: ./message-service
+    ports:
+      - "4003:4003"
+    env_file:
+      - .env
+
+  websocket-service:
+    build: ./ws
+    ports:
+      - "4004:4004"
+    env_file:
+      - .env
+    
+
+
+  proxy:
+    build: ./proxy
+    ports:
+      - "4000:80"
+    depends_on:
+      - auth-service
+      - user-service
+      - message-service
+      - websocket-service
+
+volumes:
+  mongo-data:

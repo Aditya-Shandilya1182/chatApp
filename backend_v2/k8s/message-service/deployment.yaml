@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: message-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: message-service
+  template:
+    metadata:
+      labels:
+        app: message-service
+    spec:
+      containers:
+        - name: message-service
+          image: adityashandilya1128/chat-app:message_service
+          ports:
+            - containerPort: 4003
+          envFrom:
+            - configMapRef:
+                name: app-config
